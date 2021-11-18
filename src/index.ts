@@ -1,13 +1,40 @@
 import { Command, flags } from '@oclif/command'
 import * as Listr from 'listr'
 import * as fs from 'fs'
-import { exec } from "child_process"
+import { execSync } from "child_process"
 
 const helloWorldFile = `
 export default function greet(name: string = 'World'): string {
   return "Hello, " + name + "!"
 }
 `
+
+const defaultEslintRC = `module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  plugins: [
+    '@typescript-eslint',
+  ],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+  ]
+}
+`
+
+const defaultEslintIgnore = `module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  plugins: [
+    '@typescript-eslint',
+  ],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+  ]
+}
+`
+
 
 class Tsetup extends Command {
   static description = 'Get a TypeScript off the ground quickly'
@@ -24,31 +51,18 @@ class Tsetup extends Command {
 
   static args = [{name: 'file'}]
 
-  async delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
   async exec(command: string, args: string[] = [], printOutput = false) {
-    await this.delay(1000)
-
     const sargs = args.reduce((acc, arg) => `${acc} ${arg}`)
     const cmd = sargs.length > 0 ? `${command} ${sargs}` : `${command}`
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        throw error
-      }
+    
+    try {
+      const res = execSync(cmd)
+      if (printOutput) 
+        this.log(res.toString())
+    } catch (error) {
+      throw error
+    }
 
-      // Stop if not printing output
-      if (!printOutput) return
-
-      // Print to stderr if it exists
-      if (stderr)
-        this.error(stderr)
-
-      // Print to stdout if it exists
-      if (stdout)
-        this.log(stdout)
-    })
   }
 
   async run() {
@@ -62,12 +76,29 @@ class Tsetup extends Command {
         task: async () => this.exec('npm', ['init', '-y']),
       },
       {
+        title: "Update package.json", // npm init -y
+        task: () => {
+          const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+          packageJson.main = "dist/index.js"
+          packageJson.license = "MIT"
+          packageJson.version = "0.1.0"
+          packageJson.scripts = {
+            lint: "eslint . --ext .js,.jsx,.ts,.tsx", 
+            prebuild: "npm run lint",
+            build: "tsc",
+            prestart: "npm run build",
+            start: "ts-node src/index.ts",
+          }
+          fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
+        },
+      },
+      {
         title: "Install typescript", // npm i -D typescript
         task: async () => this.exec('npm', ['i', '-D', 'typescript']),
       },
       {
         title: "Initialize the typescript project", // npm exec -y tsc --init
-        task: async () => this.exec('npm', ['exec', '-y', 'tsc', '--init']),
+        task: async () => this.exec('npx', ['tsc', '--init']),
       },
       {
         title: "Create \"src\" and \"dist\" directories", // mkdir src dist
@@ -86,12 +117,44 @@ class Tsetup extends Command {
       },
       {
         title: "Update the tsconfig", // Update tsconfig.json to add outDir and sourceMap
-        skip: () => true,
-        task: async () => this.exec("echo", ["Hello, world"]),
+        task: () => {
+          const tsconfig = {
+            compilerOptions: {
+              target: "es5",
+              module: "commonjs",
+              strict: true,
+              outDir: "dist",
+              sourceMap: true,
+            }
+          }
+          fs.writeFileSync('./tsconfig.json', JSON.stringify(tsconfig, null, 2))
+        },
       },
       {
         title: "Install eslint", // npm i -D eslint
-        task: async () => this.exec("npm", ["i", "-D", "eslint"]),
+        task: async () => this.exec("npm", ["i", "-D", "eslint", "@typescript-eslint/parser", "@typescript-eslint/eslint-plugin"]),
+      },
+      {
+        title: "Creating a \".eslintrc.js\"",
+        task: async () => {
+          await this.exec('touch', ['.eslintrc.js'])
+          try {
+            fs.writeFileSync(".eslintrc.js", defaultEslintRC)
+          } catch (error) {
+            throw error
+          }
+        },
+      },
+      {
+        title: "Creating a \".eslintignore\"",
+        task: async () => {
+          await this.exec('touch', ['.eslintignore'])
+          try {
+            fs.writeFileSync(".eslintignore", defaultEslintIgnore)
+          } catch (error) {
+            throw error
+          }
+        },
       },
       {
         title: "Set up eslint", // TODO: this
