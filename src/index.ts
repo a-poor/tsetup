@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import { execSync } from "child_process"
 
 const helloWorldFile = `
-export default function greet(name: string = 'World'): string {
+export default function greet(name = 'World') {
   return "Hello, " + name + "!"
 }
 `
@@ -82,7 +82,7 @@ class Tsetup extends Command {
             prebuild: "npm run lint",
             build: "tsc",
             prestart: "npm run build",
-            start: "ts-node src/index.ts",
+            start: "node dist/index.js",
           }
           fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
         },
