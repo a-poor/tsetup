@@ -43,13 +43,8 @@ class Tsetup extends Command {
     // add --version flag to show CLI version
     version: flags.version({char: 'v'}),
     help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
   }
 
-  static args = [{name: 'file'}]
 
   async exec(command: string, args: string[] = [], printOutput = false) {
     const sargs = args.reduce((acc, arg) => `${acc} ${arg}`)
@@ -83,7 +78,7 @@ class Tsetup extends Command {
           packageJson.license = "MIT"
           packageJson.version = "0.1.0"
           packageJson.scripts = {
-            lint: "eslint . --ext .js,.jsx,.ts,.tsx", 
+            lint: "eslint src --ext .js,.jsx,.ts,.tsx", 
             prebuild: "npm run lint",
             build: "tsc",
             prestart: "npm run build",
