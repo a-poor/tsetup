@@ -1,7 +1,7 @@
 {
   "name": "tsetup",
   "description": "A CLI to help you get your TypeScript project off the ground quickly",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "a-poor @a-poor",
   "bin": {
     "tsetup": "./bin/run"

@@ -19,7 +19,7 @@ $ npm install -g tsetup
 $ tsetup COMMAND
 running command...
 $ tsetup (-v|--version|version)
-tsetup/0.1.0 darwin-x64 node-v14.15.4
+tsetup/0.1.1 darwin-x64 node-v14.15.4
 $ tsetup --help [COMMAND]
 USAGE
   $ tsetup COMMAND
